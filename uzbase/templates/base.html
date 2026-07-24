@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.brand }} - {{ t.tagline }}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#004B93',
+                        brandGreen: '#00A88F',
+                        darkSlate: '#0F172A',
+                        darkCard: '#1E293B',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Theme detection to prevent white flash (FOUC) -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Scrollbar & styles -->
+    <style>
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 75, 147, 0.2);
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(0, 168, 143, 0.2);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #004B93 0%, #00A88F 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bg-gradient-brand {
+            background: linear-gradient(135deg, #004B93 0%, #00A88F 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-darkSlate dark:text-slate-100 transition-colors duration-300 font-sans flex flex-col min-h-screen">
+
+    <!-- Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo & Brand -->
+                <a href="{{ url_for('main.index') }}" class="flex items-center space-x-3 group flex-shrink-0">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="UZBASE Logo" class="h-16 w-auto object-contain transform group-hover:scale-105 transition duration-300">
+                    <div class="flex flex-col">
+                        <span class="text-base font-extrabold tracking-tight text-brandBlue dark:text-white transition duration-300">{{ t.brand }}</span>
+                        <span class="text-[8px] uppercase font-bold tracking-wider text-brandGreen">{{ t.tagline }}</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <div class="hidden xl:flex items-center space-x-1 lg:space-x-2 xl:space-x-4">
+                    <a href="{{ url_for('jobs.jobs') }}" class="flex items-center space-x-1 px-2 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition duration-200 whitespace-nowrap {% if request.path == '/jobs' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                        <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
+                        <span>{{ t.jobs }}</span>
+                    </a>
+                    <a href="{{ url_for('housing.housing') }}" class="flex items-center space-x-1 px-2 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition duration-200 whitespace-nowrap {% if request.path == '/housing' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                        <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                        <span>{{ t.housing }}</span>
+                    </a>
+                    <a href="{{ url_for('community.community') }}" class="flex items-center space-x-1 px-2 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition duration-200 whitespace-nowrap {% if request.path == '/community' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                        <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                        <span>{{ t.community }}</span>
+                    </a>
+                    <a href="{{ url_for('wiki.info') }}" class="flex items-center space-x-1 px-2 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition duration-200 whitespace-nowrap {% if request.path == '/info' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                        <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                        <span>{{ t.info }}</span>
+                    </a>
+                    <a href="{{ url_for('services.services') }}" class="flex items-center space-x-1 px-2 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition duration-200 whitespace-nowrap {% if request.path == '/services' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                        <span>{{ t.services }}</span>
+                    </a>
+                </div>
+
+                <!-- Right Controls Wrapper -->
+                <div class="flex items-center space-x-2 xl:space-x-4 flex-shrink-0">
+                    <!-- Desktop User Auth Controls -->
+                    <div class="hidden xl:flex items-center space-x-1.5 xl:space-x-2 border-l border-slate-200 dark:border-slate-800 pl-3 xl:pl-4">
+                        {% if session.get('username') %}
+                        <!-- Notification Dropdown -->
+                        <div class="relative inline-block text-left" id="notification-dropdown-wrapper">
+                            <button type="button" onclick="toggleNotificationDropdown()" class="relative flex items-center justify-center p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                <i data-lucide="bell" class="w-4 h-4"></i>
+                                {% if unread_notifications_count > 0 %}
+                                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                {% endif %}
+                            </button>
+                            <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-72 rounded-2xl shadow-xl bg-white dark:bg-darkCard border border-slate-100 dark:border-slate-800 focus:outline-none z-50">
+                                <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                    <span class="text-xs font-bold text-slate-800 dark:text-white">Notifications</span>
+                                    {% if unread_notifications_count > 0 %}
+                                    <button onclick="markNotificationsRead()" class="text-[10px] font-bold text-brandBlue dark:text-brandGreen hover:underline">Mark all read</button>
+                                    {% endif %}
+                                </div>
+                                <div class="py-1 max-h-64 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/80">
+                                    {% for notif in notifications_list %}
+                                    <a href="/community#topic-{{ notif.topic_id }}" class="block p-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                        <p class="text-[11px] text-slate-700 dark:text-slate-350 {% if not notif.is_read %}font-semibold{% endif %}">{{ notif.message }}</p>
+                                        <span class="text-[9px] text-slate-400 block mt-1">{{ notif.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                    </a>
+                                    {% else %}
+                                    <div class="p-4 text-center text-xs text-slate-450">
+                                        No notifications yet
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="{{ url_for('auth.cabinet') }}" class="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition duration-200 text-brandBlue dark:text-brandGreen whitespace-nowrap">
+                            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                            <span>{{ session.get('username') }}</span>
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 transition whitespace-nowrap">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                            <span>{{ t.logout }}</span>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="px-2.5 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition whitespace-nowrap">
+                            {{ t.login }}
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="px-3 py-1.5 bg-gradient-brand text-white text-xs xl:text-sm font-bold rounded-lg hover:opacity-90 transition shadow-sm whitespace-nowrap">
+                            {{ t.register }}
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Right Side Actions: Language, Theme, Mobile menu toggle -->
+                    <div class="flex items-center space-x-3">
+                        <!-- Language Select Dropdown -->
+                        <div class="relative inline-block text-left" id="lang-dropdown-wrapper">
+                            <button type="button" onclick="toggleLangDropdown()" class="flex items-center space-x-1 px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                <i data-lucide="globe" class="w-4 h-4"></i>
+                                <span class="uppercase">{{ lang }}</span>
+                                <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                            </button>
+                            <div id="lang-dropdown" class="hidden absolute right-0 mt-2 w-32 rounded-lg shadow-lg bg-white dark:bg-darkCard ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                <div class="py-1">
+                                    <a href="/set_language/uz" class="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 {% if lang == 'uz' %}font-bold text-brandBlue dark:text-brandGreen{% endif %}">
+                                        🇺🇿 O'zbekcha
+                                    </a>
+                                    <a href="/set_language/de" class="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 {% if lang == 'de' %}font-bold text-brandBlue dark:text-brandGreen{% endif %}">
+                                        🇩🇪 Deutsch
+                                    </a>
+                                    <a href="/set_language/ru" class="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 {% if lang == 'ru' %}font-bold text-brandBlue dark:text-brandGreen{% endif %}">
+                                        🇷🇺 Русский
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Theme Toggle -->
+                        <button onclick="toggleTheme()" class="p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+                            <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+                        </button>
+
+                        <!-- Mobile Burger Menu -->
+                        <button onclick="toggleMobileMenu()" class="xl:hidden p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <i data-lucide="menu" id="menu-icon" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div id="mobile-menu" class="hidden xl:hidden px-4 pt-2 pb-4 space-y-1 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-darkSlate">
+            <a href="{{ url_for('jobs.jobs') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition {% if request.path == '/jobs' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                <span>{{ t.jobs }}</span>
+            </a>
+            <a href="{{ url_for('housing.housing') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition {% if request.path == '/housing' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span>{{ t.housing }}</span>
+            </a>
+            <a href="{{ url_for('community.community') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition {% if request.path == '/community' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span>{{ t.community }}</span>
+            </a>
+            <a href="{{ url_for('wiki.info') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition {% if request.path == '/info' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                <i data-lucide="book-open" class="w-5 h-5"></i>
+                <span>{{ t.info }}</span>
+            </a>
+            <a href="{{ url_for('services.services') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition {% if request.path == '/services' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+                <span>{{ t.services }}</span>
+            </a>
+            <!-- Mobile User Auth Links -->
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+                {% if session.get('username') %}
+                <a href="{{ url_for('auth.cabinet') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i data-lucide="user" class="w-5 h-5 text-brandBlue dark:text-brandGreen"></i>
+                    <span>{{ t.cabinet }} ({{ session.get('username') }})</span>
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 transition">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span>{{ t.logout }}</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i data-lucide="log-in" class="w-5 h-5 text-slate-500"></i>
+                    <span>{{ t.login }}</span>
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-slate-500"></i>
+                    <span>{{ t.register }}</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-grow pt-28 pb-12">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard border-t border-slate-200 dark:border-slate-800 py-8 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="flex items-center space-x-3">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="UZBASE Logo" class="h-8 w-auto">
+                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">© 2026 {{ t.brand }}. {{ t.tagline }}.</span>
+            </div>
+            <div class="flex space-x-6 text-sm text-slate-500 dark:text-slate-400">
+                <a href="#" class="hover:text-brandBlue dark:hover:text-brandGreen transition">Datenschutz</a>
+                <a href="#" class="hover:text-brandBlue dark:hover:text-brandGreen transition">Impressum</a>
+                <a href="#" class="hover:text-brandBlue dark:hover:text-brandGreen transition">Kontakt</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Prompt Modal -->
+    <div id="auth-prompt-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 w-full max-w-md p-6 relative shadow-2xl space-y-6 transform transition-all duration-300">
+            <!-- Close Button -->
+            <button onclick="closeModal('auth-prompt-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="text-center space-y-4 pt-4">
+                <!-- Icon -->
+                <div class="w-16 h-16 bg-brandBlue/10 text-brandBlue dark:bg-brandBlue/20 rounded-full flex items-center justify-center mx-auto">
+                    <i data-lucide="user-check" class="w-8 h-8"></i>
+                </div>
+                
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+                    {% if session.get('lang', 'uz') == 'ru' %}
+                    Требуется авторизация
+                    {% elif session.get('lang', 'uz') == 'de' %}
+                    Anmeldung erforderlich
+                    {% else %}
+                    Avtorizatsiya zarur
+                    {% endif %}
+                </h3>
+                
+                <p class="text-sm text-slate-500 dark:text-slate-400 px-2">
+                    {% if session.get('lang', 'uz') == 'ru' %}
+                    Чтобы разместить объявление или тему, пожалуйста, войдите в свой аккаунт или зарегистрируйтесь.
+                    {% elif session.get('lang', 'uz') == 'de' %}
+                    Um eine Anzeige zu schalten oder ein Thema zu erstellen, melde dich bitte an oder registriere dich.
+                    {% else %}
+                    E'lon joylash yoki mavzu ochish uchun, iltimos tizimga kiring yoki ro'yxatdan o'ting.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <a href="{{ url_for('auth.login') }}" class="w-full py-3 text-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition text-sm">
+                    {{ t.login }}
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="w-full py-3 text-center bg-gradient-brand text-white font-bold rounded-xl hover:opacity-90 shadow-md transition text-sm">
+                    {{ t.register }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive JS Scripts -->
+    <script>
+        // Lucide Icons initialization
+        lucide.createIcons();
+
+        // Language Dropdown
+        function toggleLangDropdown() {
+            const dropdown = document.getElementById('lang-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('lang-dropdown-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('lang-dropdown').classList.add('hidden');
+            }
+        });
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('menu-icon');
+            menu.classList.toggle('hidden');
+            if (menu.classList.contains('hidden')) {
+                icon.setAttribute('data-lucide', 'menu');
+            } else {
+                icon.setAttribute('data-lucide', 'x');
+            }
+            lucide.createIcons();
+        }
+
+        // Theme Switcher
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notification-dropdown');
+            if (dropdown) dropdown.classList.toggle('hidden');
+        }
+
+        function markNotificationsRead() {
+            fetch('/notifications/mark-read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const dot = document.querySelector('#notification-dropdown-wrapper .bg-red-500');
+                    if (dot) dot.remove();
+                    document.querySelectorAll('#notification-dropdown p').forEach(p => {
+                        p.classList.remove('font-semibold');
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('click', function(e) {
+            const langWrapper = document.getElementById('lang-dropdown-wrapper');
+            const langDropdown = document.getElementById('lang-dropdown');
+            if (langWrapper && !langWrapper.contains(e.target)) {
+                langDropdown.classList.add('hidden');
+            }
+
+            const notifWrapper = document.getElementById('notification-dropdown-wrapper');
+            const notifDropdown = document.getElementById('notification-dropdown');
+            if (notifWrapper && !notifWrapper.contains(e.target)) {
+                if (notifDropdown) notifDropdown.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <!-- Header Area -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">{{ t.jobs }}</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Find the best career opportunities or post your own listings.</p>
+        </div>
+        {% if session.get('username') %}
+        <button onclick="openModal('post-job-modal')" class="bg-gradient-brand text-white font-bold px-5 py-3 rounded-xl hover:opacity-90 shadow-md transition flex items-center space-x-2 self-start md:self-auto">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            <span>{{ t.post_job }}</span>
+        </button>
+        {% else %}
+        <button onclick="openModal('auth-prompt-modal')" class="bg-gradient-brand text-white font-bold px-5 py-3 rounded-xl hover:opacity-90 shadow-md transition flex items-center space-x-2 self-start md:self-auto">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            <span>{{ t.post_job }}</span>
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Filters Section -->
+    <form method="GET" action="{{ url_for('jobs.jobs') }}" class="bg-white dark:bg-darkCard p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search bar -->
+        <div class="relative">
+            <i data-lucide="search" class="absolute left-3 top-3.5 w-5 h-5 text-slate-400"></i>
+            <input type="text" name="query" value="{{ query }}" placeholder="{{ t.search_placeholder }}" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+        </div>
+        <!-- City filter -->
+        <div>
+            <select name="city" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                <option value="">{{ t.all_cities }}</option>
+                {% for city in cities %}
+                <option value="{{ city }}" {% if city_filter == city %}selected{% endif %}>{{ city }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Category filter -->
+        <div>
+            <select name="category" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                <option value="">{{ t.category }} ({{ t.all }})</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat_filter == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Submit / Clear button -->
+        <div class="flex space-x-2">
+            <button type="submit" class="flex-grow bg-brandBlue text-white font-bold py-3 rounded-xl hover:bg-brandBlue/90 transition text-sm">{{ t.search }}</button>
+            {% if query or city_filter or cat_filter %}
+            <a href="{{ url_for('jobs.jobs') }}" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl transition flex items-center justify-center">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Jobs Grid -->
+    {% if jobs %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for job in jobs %}
+        <div id="job-{{ job.id }}" class="bg-white dark:bg-darkCard rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition flex flex-col justify-between scroll-mt-28">
+            <div class="space-y-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xs font-bold text-brandGreen bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full uppercase tracking-wider">{{ job.category }}</span>
+                        <h3 class="text-xl font-bold mt-2 text-slate-900 dark:text-white">{{ job.title }}</h3>
+                        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{{ job.company }}</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{{ job.type }}</span>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300 line-clamp-3">{{ job.description }}</p>
+                {% if job.email or job.phone %}
+                <div class="text-xs text-slate-400 space-y-1 mt-2 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                    {% if job.email %}
+                    <div class="flex items-center space-x-1">
+                        <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Email: <a href="mailto:{{ job.email }}" class="text-brandBlue hover:underline">{{ job.email }}</a></span>
+                    </div>
+                    {% endif %}
+                    {% if job.phone %}
+                    <div class="flex items-center space-x-1">
+                        <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Tel: <a href="tel:{{ job.phone }}" class="text-brandBlue hover:underline">{{ job.phone }}</a></span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <span class="flex items-center space-x-1 text-sm text-slate-500 dark:text-slate-400">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-brandBlue"></i>
+                        <span>{{ job.city }}</span>
+                    </span>
+                    <span class="text-sm font-bold text-brandBlue dark:text-brandGreen">{{ job.salary }}</span>
+                </div>
+                <a href="https://t.me/{{ job.contact.replace('@','') }}" target="_blank" class="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>{{ t.contact }} ({{ job.contact }})</span>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 bg-white dark:bg-darkCard rounded-2xl border border-slate-200 dark:border-slate-800">
+        <i data-lucide="info" class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4"></i>
+        <h3 class="text-lg font-bold text-slate-500 dark:text-slate-400">{{ t.empty_results }}</h3>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Dialog for Posting Job -->
+<div id="post-job-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('post-job-modal')"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-white dark:bg-darkCard rounded-3xl max-w-lg w-full p-8 shadow-2xl z-10 border border-slate-100 dark:border-slate-800 transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gradient">{{ t.post_job }}</h3>
+                <button onclick="closeModal('post-job-modal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('jobs.jobs') }}" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.category }}</label>
+                    <select name="category" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                        <option value="IT">IT</option>
+                        <option value="Gastronomy">Gastronomy</option>
+                        <option value="Logistics">Logistics</option>
+                        <option value="Student Jobs">Student Jobs</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Job Title</label>
+                        <input type="text" name="title" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Company</label>
+                        <input type="text" name="company" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">City</label>
+                        <input type="text" name="city" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Salary</label>
+                        <input type="text" name="salary" placeholder="e.g. €15 / hour" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Job Type</label>
+                    <select name="type" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Student Jobs">Student Job</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.description }}</label>
+                    <textarea name="description" rows="3" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Email Address</label>
+                        <input type="email" name="email" placeholder="e.g. jobs@company.com" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telephone (Optional)</label>
+                        <input type="text" name="phone" placeholder="e.g. +49 176 1234567" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telegram Username</label>
+                    <input type="text" name="contact" placeholder="e.g. @username" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('post-job-modal')" class="px-5 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition text-sm">{{ t.cancel }}</button>
+                    <button type="submit" class="bg-gradient-brand text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 transition text-sm">{{ t.submit }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Page modal scripts are inherited from base.html -->
+{% endblock %}

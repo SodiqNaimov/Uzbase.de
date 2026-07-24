@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-8">
+    <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-8 space-y-6">
+        <div class="text-center space-y-2">
+            <h1 class="text-3xl font-extrabold tracking-tight text-gradient">{{ t.register }}</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Join the UZBASE Uzbek community in Germany.</p>
+        </div>
+
+        {% if error %}
+        <div class="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 rounded-2xl flex items-start space-x-3 text-red-600 dark:text-red-400">
+            <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+            <span class="text-xs font-semibold">{{ error }}</span>
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl flex items-start space-x-3 text-emerald-600 dark:text-emerald-400">
+            <i data-lucide="check-circle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+            <div class="space-y-1">
+                <span class="text-xs font-bold block">{{ success }}</span>
+                <a href="{{ url_for('auth.login') }}" class="text-xs font-bold underline hover:no-underline">Go to Login</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4" onsubmit="return validateRegisterForm()">
+            <!-- CSRF Token -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.fullname }}</label>
+                <div class="relative">
+                    <i data-lucide="user-check" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="text" name="fullname" required class="w-full pl-9 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.email }}</label>
+                <div class="relative">
+                    <i data-lucide="mail" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="email" name="email" required class="w-full pl-9 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.username }}</label>
+                <div class="relative">
+                    <i data-lucide="user" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="text" name="username" required class="w-full pl-9 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.password }}</label>
+                <div class="relative">
+                    <i data-lucide="lock" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="password" id="register-password" name="password" required class="w-full pl-9 pr-10 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    <button type="button" onclick="togglePasswordVisibility('register-password', 'eye-icon-reg-1')" class="absolute right-3 top-3.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200">
+                        <i data-lucide="eye" id="eye-icon-reg-1" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p class="text-[10px] mt-1 text-slate-400 leading-normal">{{ t.security_warning }}</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.confirm_password }}</label>
+                <div class="relative">
+                    <i data-lucide="key-round" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="password" id="register-confirm-password" name="confirm_password" required class="w-full pl-9 pr-10 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-705 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    <button type="button" onclick="togglePasswordVisibility('register-confirm-password', 'eye-icon-reg-2')" class="absolute right-3 top-3.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200">
+                        <i data-lucide="eye" id="eye-icon-reg-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="js-error" class="hidden p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 text-red-600 rounded-xl text-xs font-bold"></div>
+
+            <button type="submit" class="w-full py-3 bg-gradient-brand text-white font-bold rounded-xl hover:opacity-90 transition shadow-md text-sm">
+                {{ t.register }}
+            </button>
+        </form>
+
+        <div class="text-center pt-4 border-t border-slate-100 dark:border-slate-800/80">
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                Already have an account? 
+                <a href="{{ url_for('auth.login') }}" class="font-bold text-brandBlue dark:text-brandGreen hover:underline">{{ t.login }}</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validateRegisterForm() {
+        const password = document.getElementById('register-password').value;
+        const confirm = document.getElementById('register-confirm-password').value;
+        const errDiv = document.getElementById('js-error');
+        errDiv.classList.add('hidden');
+
+        if (password.length < 8) {
+            errDiv.innerText = "Password must be at least 8 characters.";
+            errDiv.classList.remove('hidden');
+            return false;
+        }
+
+        const specialCharReg = /[^a-zA-Z0-9]/;
+        if (!specialCharReg.test(password)) {
+            errDiv.innerText = "Password must contain at least one special character.";
+            errDiv.classList.remove('hidden');
+            return false;
+        }
+
+        if (password !== confirm) {
+            errDiv.innerText = "Passwords do not match.";
+            errDiv.classList.remove('hidden');
+            return false;
+        }
+
+        return true;
+    }
+
+    function togglePasswordVisibility(fieldId, iconId) {
+        const passwordInput = document.getElementById(fieldId);
+        const icon = document.getElementById(iconId);
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            passwordInput.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

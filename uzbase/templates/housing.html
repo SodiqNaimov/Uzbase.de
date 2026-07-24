@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <!-- Header Area -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">{{ t.housing }}</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Find room shares, whole apartments, or sublets in Germany.</p>
+        </div>
+        {% if session.get('username') %}
+        <button onclick="openModal('post-housing-modal')" class="bg-gradient-brand text-white font-bold px-5 py-3 rounded-xl hover:opacity-90 shadow-md transition flex items-center space-x-2 self-start md:self-auto">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            <span>{{ t.post_house }}</span>
+        </button>
+        {% else %}
+        <button onclick="openModal('auth-prompt-modal')" class="bg-gradient-brand text-white font-bold px-5 py-3 rounded-xl hover:opacity-90 shadow-md transition flex items-center space-x-2 self-start md:self-auto">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            <span>{{ t.post_house }}</span>
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Filters Section -->
+    <form method="GET" action="{{ url_for('housing.housing') }}" class="bg-white dark:bg-darkCard p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search bar -->
+        <div class="relative">
+            <i data-lucide="search" class="absolute left-3 top-3.5 w-5 h-5 text-slate-400"></i>
+            <input type="text" name="query" value="{{ query }}" placeholder="{{ t.search_placeholder }}" class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+        </div>
+        <!-- City filter -->
+        <div>
+            <select name="city" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                <option value="">{{ t.all_cities }}</option>
+                {% for city in cities %}
+                <option value="{{ city }}" {% if city_filter == city %}selected{% endif %}>{{ city }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Type filter -->
+        <div>
+            <select name="type" onchange="this.form.submit()" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                <option value="">{{ t.category }} ({{ t.all }})</option>
+                {% for t_opt in types %}
+                <option value="{{ t_opt }}" {% if type_filter == t_opt %}selected{% endif %}>{{ t_opt }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Search buttons -->
+        <div class="flex space-x-2">
+            <button type="submit" class="flex-grow bg-brandBlue text-white font-bold py-3 rounded-xl hover:bg-brandBlue/90 transition text-sm">{{ t.search }}</button>
+            {% if query or city_filter or type_filter %}
+            <a href="{{ url_for('housing.housing') }}" class="p-3 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl transition flex items-center justify-center">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Housing Grid -->
+    {% if housing %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for house in housing %}
+        <div id="house-{{ house.id }}" class="bg-white dark:bg-darkCard rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-lg transition scroll-mt-28">
+            <!-- Details -->
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-brandBlue bg-blue-50 dark:bg-blue-950/30 px-2.5 py-1 rounded-full uppercase tracking-wider">{{ house.type }}</span>
+                    <span class="text-sm font-bold text-brandGreen">€{{ house.price }} / month</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">{{ house.title }}</h3>
+                    <div class="flex items-center space-x-1 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brandGreen"></i>
+                        <span class="font-semibold">{{ house.city }}</span>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-300 line-clamp-3">{{ house.description }}</p>
+                {% if house.email or house.phone %}
+                <div class="text-xs text-slate-400 space-y-1 mt-2 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                    {% if house.email %}
+                    <div class="flex items-center space-x-1">
+                        <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Email: <a href="mailto:{{ house.email }}" class="text-brandBlue hover:underline">{{ house.email }}</a></span>
+                    </div>
+                    {% endif %}
+                    {% if house.phone %}
+                    <div class="flex items-center space-x-1">
+                        <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Tel: <a href="tel:{{ house.phone }}" class="text-brandBlue hover:underline">{{ house.phone }}</a></span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl text-center text-xs">
+                    <div>
+                        <span class="block text-slate-400 uppercase font-semibold text-[10px] tracking-wider">{{ t.size }}</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ house.size }} m²</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 uppercase font-semibold text-[10px] tracking-wider">{{ t.availability }}</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ house.available_from }}</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Contact footer -->
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20">
+                <a href="https://t.me/{{ house.contact.replace('@','') }}" target="_blank" class="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>{{ t.contact }} ({{ house.contact }})</span>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 bg-white dark:bg-darkCard rounded-2xl border border-slate-200 dark:border-slate-800">
+        <i data-lucide="info" class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4"></i>
+        <h3 class="text-lg font-bold text-slate-500 dark:text-slate-400">{{ t.empty_results }}</h3>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Dialog for Posting Housing -->
+<div id="post-housing-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('post-housing-modal')"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-white dark:bg-darkCard rounded-3xl max-w-lg w-full p-8 shadow-2xl z-10 border border-slate-100 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gradient">{{ t.post_house }}</h3>
+                <button onclick="closeModal('post-housing-modal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('housing.housing') }}" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Accommodation Type</label>
+                    <select name="type" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                        <option value="Room Share (WG)">Room Share (WG)</option>
+                        <option value="Apartment Rental">Apartment Rental</option>
+                        <option value="Short-term Stay">Short-term Stay</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Title</label>
+                    <input type="text" name="title" placeholder="e.g. Modern WG room with registration" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">City</label>
+                        <input type="text" name="city" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Monthly Rent (€)</label>
+                        <input type="number" name="price" placeholder="e.g. 500" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Size (m²)</label>
+                        <input type="number" name="size" placeholder="e.g. 25" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Available From</label>
+                        <input type="date" name="available_from" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.description }}</label>
+                    <textarea name="description" rows="3" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Email Address</label>
+                        <input type="email" name="email" placeholder="e.g. rent@domain.com" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telephone (Optional)</label>
+                        <input type="text" name="phone" placeholder="e.g. +49 176 1234567" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telegram Username</label>
+                    <input type="text" name="contact" placeholder="e.g. @username" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('post-housing-modal')" class="px-5 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition text-sm">{{ t.cancel }}</button>
+                    <button type="submit" class="bg-gradient-brand text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 transition text-sm">{{ t.submit }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Page modal scripts are inherited from base.html -->
+{% endblock %}

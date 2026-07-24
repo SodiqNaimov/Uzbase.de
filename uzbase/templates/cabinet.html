@@ -1,0 +1,709 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <!-- Cabinet Header -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-darkCard p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+        <div class="flex items-center space-x-4">
+            <div class="w-16 h-16 rounded-full bg-gradient-brand text-white text-2xl font-extrabold flex items-center justify-center shadow-lg">
+                {{ user.username[0].upper() }}
+            </div>
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white">{{ user.full_name }}</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">@{{ user.username }}</p>
+            </div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" class="px-5 py-2.5 rounded-xl border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 font-bold hover:bg-red-50 dark:hover:bg-red-950/20 transition text-sm flex items-center space-x-2">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>{{ t.logout }}</span>
+        </a>
+    </div>
+
+    <!-- Main Cabinet Grid (Sidebar + Contents) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Left Sidebar Navigation -->
+        <div class="lg:col-span-1">
+            <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-2">
+                <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 px-4 mb-4">{{ t.navigation }}</h3>
+                
+                <button onclick="switchTab('profile')" id="btn-profile" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all duration-300">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    <span>{{ t.profile_settings }}</span>
+                </button>
+                
+                <button onclick="switchTab('password')" id="btn-password" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all duration-300">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    <span>{{ t.change_password }}</span>
+                </button>
+                
+                <button onclick="switchTab('listings')" id="btn-listings" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all duration-300">
+                    <i data-lucide="archive" class="w-4 h-4"></i>
+                    <span>{{ t.my_listings }}</span>
+                    {% if user_jobs or user_housing or user_topics %}
+                    <span id="nav-badge" class="ml-auto bg-brandBlue text-white text-[10px] px-2 py-0.5 rounded-full">
+                        {{ user_jobs|length + user_housing|length + user_topics|length }}
+                    </span>
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Content Section -->
+        <div class="lg:col-span-3">
+            <!-- 👤 Profile Settings Section -->
+            <div id="section-profile" class="tab-section bg-white dark:bg-darkCard rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 hidden">
+                <h3 class="text-lg font-bold text-gradient">{{ t.profile_settings }}</h3>
+
+                {% if action == 'update_profile' and error %}
+                <div class="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                {% if action == 'update_profile' and success %}
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold">
+                    {{ success }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('auth.cabinet') }}" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="update_profile">
+                    <input type="hidden" name="active_tab" value="profile">
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">{{ t.username }}</label>
+                        <input type="text" value="{{ user.username }}" disabled class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-transparent rounded-xl text-slate-400 text-xs cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">{{ t.fullname }}</label>
+                        <input type="text" name="fullname" value="{{ user.full_name }}" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-xs">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">{{ t.email }}</label>
+                        <input type="email" name="email" value="{{ user.email }}" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-xs">
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-brandBlue text-white font-bold rounded-xl hover:bg-brandBlue/90 transition text-xs">
+                        {{ t.update_details }}
+                    </button>
+                </form>
+            </div>
+
+            <!-- 🔒 Change Password Section -->
+            <div id="section-password" class="tab-section bg-white dark:bg-darkCard rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 hidden">
+                <h3 class="text-lg font-bold text-gradient">{{ t.change_password }}</h3>
+
+                {% if action == 'change_password' and error %}
+                <div class="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                {% if action == 'change_password' and success %}
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold">
+                    {{ success }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('auth.cabinet') }}" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="change_password">
+                    <input type="hidden" name="active_tab" value="password">
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">{{ t.current_password }}</label>
+                        <div class="relative">
+                            <input type="password" id="current-password" name="current_password" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-xs pr-10">
+                            <button type="button" onclick="togglePasswordVisibility('current-password', 'eye-current')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                <i data-lucide="eye" id="eye-current" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">{{ t.new_password }}</label>
+                        <div class="relative">
+                            <input type="password" id="new-password" name="new_password" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-xs pr-10">
+                            <button type="button" onclick="togglePasswordVisibility('new-password', 'eye-new')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                <i data-lucide="eye" id="eye-new" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-2">{{ t.confirm_new_password }}</label>
+                        <div class="relative">
+                            <input type="password" id="confirm-new-password" name="confirm_new_password" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-xs pr-10">
+                            <button type="button" onclick="togglePasswordVisibility('confirm-new-password', 'eye-confirm')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                <i data-lucide="eye" id="eye-confirm" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-brandGreen text-white font-bold rounded-xl hover:opacity-90 transition text-xs">
+                        {{ t.change_password }}
+                    </button>
+                </form>
+            </div>
+
+            <!-- 📦 My Listings Section -->
+            <div id="section-listings" class="tab-section bg-white dark:bg-darkCard rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 hidden">
+                <h3 class="text-lg font-bold text-gradient">{{ t.my_listings_posts }}</h3>
+
+                {% if action in ['delete_my_job', 'delete_my_housing', 'delete_my_topic', 'edit_my_job', 'edit_my_housing', 'edit_my_topic'] and error %}
+                <div class="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                {% if action in ['delete_my_job', 'delete_my_housing', 'delete_my_topic', 'edit_my_job', 'edit_my_housing', 'edit_my_topic'] and success %}
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold">
+                    {{ success }}
+                </div>
+                {% endif %}
+
+                {% if not user_jobs and not user_housing and not user_topics %}
+                <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">{{ t.no_listings_yet }}</p>
+                {% else %}
+                
+                <!-- Google-style Search Bar -->
+                <div class="relative w-full max-w-xl mx-auto mb-6">
+                    <div class="flex items-center bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/85 rounded-full px-4 py-2.5 shadow-sm hover:shadow-md focus-within:shadow-md transition duration-300">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-3"></i>
+                        <input type="text" id="listings-search" placeholder="{{ t.search_my_listings }}..." class="w-full bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400">
+                        <button onclick="clearSearch()" id="clear-search-btn" class="hidden text-slate-450 hover:text-slate-600 dark:hover:text-slate-300 transition mr-1">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Jobs -->
+                    {% if user_jobs %}
+                    <div class="space-y-3 listing-group">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t.jobs_listings }}</h4>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800 border-t border-b border-slate-100 dark:border-slate-800">
+                            {% for job in user_jobs %}
+                            <div class="py-4 listing-item" data-search-text="{{ job.title }} {{ job.company }} {{ job.city }} {{ job.description }}">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Interactive Chevron Button -->
+                                        <button onclick="toggleItemDetails('job-details-{{ job.id }}', 'chevron-job-{{ job.id }}')" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-full transition flex items-center justify-center w-6 h-6 outline-none">
+                                            <i data-lucide="chevron-down" id="chevron-job-{{ job.id }}" class="w-3.5 h-3.5 transition-transform duration-300"></i>
+                                        </button>
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900 dark:text-white">{{ job.title }}</p>
+                                            <p class="text-xs text-slate-400">{{ job.company }} • {{ job.city }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Edit button with data attributes -->
+                                        <button onclick="editJob(this)"
+                                                data-id="{{ job.id }}"
+                                                data-title="{{ job.title }}"
+                                                data-company="{{ job.company }}"
+                                                data-city="{{ job.city }}"
+                                                data-salary="{{ job.salary }}"
+                                                data-type="{{ job.type }}"
+                                                data-category="{{ job.category }}"
+                                                data-description="{{ job.description }}"
+                                                data-contact="{{ job.contact }}"
+                                                data-email="{{ job.email or '' }}"
+                                                data-phone="{{ job.phone or '' }}"
+                                                class="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 rounded-xl border border-slate-150 dark:border-slate-700/50 transition" title="{{ t.edit }}">
+                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        </button>
+                                        <a href="{{ url_for('jobs.jobs') }}#job-{{ job.id }}" class="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-slate-500 dark:text-slate-400 rounded-xl border border-slate-150 dark:border-slate-700/50 transition" title="Live viewing">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('auth.cabinet') }}" onsubmit="return confirm('Ish e\'lonini o\'chirishni tasdiqlaysizmi?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_my_job">
+                                            <input type="hidden" name="active_tab" value="listings">
+                                            <input type="hidden" name="id" value="{{ job.id }}">
+                                            <button type="submit" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition">{{ t.delete }}</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expandable Info Panel -->
+                                <div id="job-details-{{ job.id }}" class="hidden px-5 py-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800/60 mt-3 text-xs text-slate-650 dark:text-slate-350 space-y-2.5">
+                                    <p class="leading-relaxed"><strong>{{ t.description }}:</strong> {{ job.description }}</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                                        <p><strong>{{ t.category }}:</strong> {{ job.category }}</p>
+                                        <p><strong>Turi (Type):</strong> {{ job.type }}</p>
+                                        <p><strong>Maosh (Salary):</strong> {{ job.salary }}</p>
+                                        <p><strong>Telegram:</strong> <a href="https://t.me/{{ job.contact.replace('@','') }}" target="_blank" class="text-brandBlue dark:text-brandGreen hover:underline">{{ job.contact }}</a></p>
+                                        {% if job.email %}
+                                        <p><strong>Email:</strong> <a href="mailto:{{ job.email }}" class="text-brandBlue dark:text-brandGreen hover:underline">{{ job.email }}</a></p>
+                                        {% endif %}
+                                        {% if job.phone %}
+                                        <p><strong>Tel:</strong> <a href="tel:{{ job.phone }}" class="text-brandBlue dark:text-brandGreen hover:underline">{{ job.phone }}</a></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Housing -->
+                    {% if user_housing %}
+                    <div class="space-y-3 listing-group">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t.housing_listings }}</h4>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800 border-t border-b border-slate-100 dark:border-slate-800">
+                            {% for house in user_housing %}
+                            <div class="py-4 listing-item" data-search-text="{{ house.title }} {{ house.type }} {{ house.city }} {{ house.description }}">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Interactive Chevron Button -->
+                                        <button onclick="toggleItemDetails('house-details-{{ house.id }}', 'chevron-house-{{ house.id }}')" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-full transition flex items-center justify-center w-6 h-6 outline-none">
+                                            <i data-lucide="chevron-down" id="chevron-house-{{ house.id }}" class="w-3.5 h-3.5 transition-transform duration-300"></i>
+                                        </button>
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900 dark:text-white">{{ house.title }}</p>
+                                            <p class="text-xs text-slate-400">{{ house.type }} • €{{ house.price }} • {{ house.city }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Edit button with data attributes -->
+                                        <button onclick="editHousing(this)"
+                                                data-id="{{ house.id }}"
+                                                data-title="{{ house.title }}"
+                                                data-type="{{ house.type }}"
+                                                data-city="{{ house.city }}"
+                                                data-price="{{ house.price }}"
+                                                data-size="{{ house.size }}"
+                                                data-available="{{ house.available_from }}"
+                                                data-description="{{ house.description }}"
+                                                data-contact="{{ house.contact }}"
+                                                data-email="{{ house.email or '' }}"
+                                                data-phone="{{ house.phone or '' }}"
+                                                class="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 rounded-xl border border-slate-150 dark:border-slate-700/50 transition" title="{{ t.edit }}">
+                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        </button>
+                                        <a href="{{ url_for('housing.housing') }}#house-{{ house.id }}" class="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-slate-500 dark:text-slate-400 rounded-xl border border-slate-150 dark:border-slate-700/50 transition" title="Live viewing">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('auth.cabinet') }}" onsubmit="return confirm('Turar joy e\'lonini o\'chirishni tasdiqlaysizmi?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_my_housing">
+                                            <input type="hidden" name="active_tab" value="listings">
+                                            <input type="hidden" name="id" value="{{ house.id }}">
+                                            <button type="submit" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition">{{ t.delete }}</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expandable Info Panel -->
+                                <div id="house-details-{{ house.id }}" class="hidden px-5 py-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800/60 mt-3 text-xs text-slate-650 dark:text-slate-350 space-y-2.5">
+                                    <p class="leading-relaxed"><strong>{{ t.description }}:</strong> {{ house.description }}</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                                        <p><strong>Turi (Type):</strong> {{ house.type }}</p>
+                                        <p><strong>{{ t.city }}:</strong> {{ house.city }}</p>
+                                        <p><strong>{{ t.price }}:</strong> €{{ house.price }} / month</p>
+                                        <p><strong>{{ t.size }}:</strong> {{ house.size }} m²</p>
+                                        <p><strong>{{ t.availability }}:</strong> {{ house.available_from }}</p>
+                                        <p><strong>Telegram:</strong> <a href="https://t.me/{{ house.contact.replace('@','') }}" target="_blank" class="text-brandBlue dark:text-brandGreen hover:underline">{{ house.contact }}</a></p>
+                                        {% if house.email %}
+                                        <p><strong>Email:</strong> <a href="mailto:{{ house.email }}" class="text-brandBlue dark:text-brandGreen hover:underline">{{ house.email }}</a></p>
+                                        {% endif %}
+                                        {% if house.phone %}
+                                        <p><strong>Tel:</strong> <a href="tel:{{ house.phone }}" class="text-brandBlue dark:text-brandGreen hover:underline">{{ house.phone }}</a></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Forum Topics -->
+                    {% if user_topics %}
+                    <div class="space-y-3 listing-group">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t.forum_topics }}</h4>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800 border-t border-b border-slate-100 dark:border-slate-800">
+                            {% for topic in user_topics %}
+                            <div class="py-4 listing-item" data-search-text="{{ topic.title }} {{ topic.category }}">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Interactive Chevron Button -->
+                                        <button onclick="toggleItemDetails('topic-details-{{ topic.id }}', 'chevron-topic-{{ topic.id }}')" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-full transition flex items-center justify-center w-6 h-6 outline-none">
+                                            <i data-lucide="chevron-down" id="chevron-topic-{{ topic.id }}" class="w-3.5 h-3.5 transition-transform duration-300"></i>
+                                        </button>
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900 dark:text-white">{{ topic.title }}</p>
+                                            <p class="text-xs text-slate-400">{{ topic.category }} • {{ topic.upvotes }} ovoz</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Edit button with data attributes -->
+                                        <button onclick="editTopic(this)"
+                                                data-id="{{ topic.id }}"
+                                                data-title="{{ topic.title }}"
+                                                data-category="{{ topic.category }}"
+                                                class="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 rounded-xl border border-slate-150 dark:border-slate-700/50 transition" title="{{ t.edit }}">
+                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        </button>
+                                        <a href="{{ url_for('community.community') }}#topic-{{ topic.id }}" class="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-slate-500 dark:text-slate-400 rounded-xl border border-slate-150 dark:border-slate-700/50 transition" title="Live viewing">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('auth.cabinet') }}" onsubmit="return confirm('Mavzuni o\'chirishni tasdiqlaysizmi?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_my_topic">
+                                            <input type="hidden" name="active_tab" value="listings">
+                                            <input type="hidden" name="id" value="{{ topic.id }}">
+                                            <button type="submit" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition">{{ t.delete }}</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expandable Info Panel -->
+                                <div id="topic-details-{{ topic.id }}" class="hidden px-5 py-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800/60 mt-3 text-xs text-slate-650 dark:text-slate-350 space-y-2.5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <p><strong>Bo'lim:</strong> {{ topic.category }}</p>
+                                        <p><strong>Ovozlar (Upvotes):</strong> {{ topic.upvotes }}</p>
+                                        <p><strong>Yaratilgan vaqt (Created At):</strong> {{ topic.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                                    </div>
+                                    {% if topic.replies %}
+                                    <div class="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+                                        <p class="font-bold text-[10px] uppercase text-slate-400 tracking-wider">Fikrlar & javoblar (Comments):</p>
+                                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                            {% for reply in topic.replies %}
+                                            <div class="pl-3 border-l-2 border-slate-200 dark:border-slate-700 py-1 bg-white/40 dark:bg-slate-900/20 rounded-r-lg p-2 text-xs">
+                                                <span class="font-bold text-slate-700 dark:text-slate-200">@{{ reply.author }}:</span>
+                                                <p class="text-slate-600 dark:text-slate-300 mt-0.5">{{ reply.text }}</p>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 📝 Edit Job Modal -->
+<div id="edit-job-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('edit-job-modal')"></div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-white dark:bg-darkCard rounded-3xl p-8 border border-slate-200 dark:border-slate-800 w-full max-w-lg shadow-2xl space-y-6">
+            <h3 class="text-xl font-bold text-gradient">{{ t.edit_job }}</h3>
+            <form method="POST" action="{{ url_for('auth.cabinet') }}" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="edit_my_job">
+                <input type="hidden" name="active_tab" value="listings">
+                <input type="hidden" id="edit-job-id" name="id">
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Job Title</label>
+                    <input type="text" id="edit-job-title" name="title" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Company</label>
+                        <input type="text" id="edit-job-company" name="company" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">City</label>
+                        <input type="text" id="edit-job-city" name="city" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Salary</label>
+                        <input type="text" id="edit-job-salary" name="salary" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Category</label>
+                        <input type="text" id="edit-job-category" name="category" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Job Type</label>
+                    <select id="edit-job-type" name="type" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Student Jobs">Student Job</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.description }}</label>
+                    <textarea id="edit-job-description" name="description" rows="3" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Email Address</label>
+                        <input type="email" id="edit-job-email" name="email" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telephone (Optional)</label>
+                        <input type="text" id="edit-job-phone" name="phone" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telegram Username</label>
+                    <input type="text" id="edit-job-contact" name="contact" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('edit-job-modal')" class="px-5 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition text-sm">{{ t.cancel }}</button>
+                    <button type="submit" class="bg-gradient-brand text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 transition text-sm">{{ t.save }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 📝 Edit Housing Modal -->
+<div id="edit-housing-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('edit-housing-modal')"></div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-white dark:bg-darkCard rounded-3xl p-8 border border-slate-200 dark:border-slate-800 w-full max-w-lg shadow-2xl space-y-6">
+            <h3 class="text-xl font-bold text-gradient">{{ t.edit_housing }}</h3>
+            <form method="POST" action="{{ url_for('auth.cabinet') }}" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="edit_my_housing">
+                <input type="hidden" name="active_tab" value="listings">
+                <input type="hidden" id="edit-house-id" name="id">
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Listing Title</label>
+                    <input type="text" id="edit-house-title" name="title" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Housing Type</label>
+                        <select id="edit-house-type" name="type" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                            <option value="Room Share (WG)">Room Share (WG)</option>
+                            <option value="Apartment Rental">Apartment Rental</option>
+                            <option value="Short-term Stay">Short-term Stay</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">City</label>
+                        <input type="text" id="edit-house-city" name="city" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Monthly Rent (€)</label>
+                        <input type="number" id="edit-house-price" name="price" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Size (m²)</label>
+                        <input type="number" id="edit-house-size" name="size" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Available From</label>
+                    <input type="text" id="edit-house-available" name="available_from" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">{{ t.description }}</label>
+                    <textarea id="edit-house-description" name="description" rows="3" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Email Address</label>
+                        <input type="email" id="edit-house-email" name="email" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telephone (Optional)</label>
+                        <input type="text" id="edit-house-phone" name="phone" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Telegram Username</label>
+                    <input type="text" id="edit-house-contact" name="contact" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('edit-housing-modal')" class="px-5 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition text-sm">{{ t.cancel }}</button>
+                    <button type="submit" class="bg-gradient-brand text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 transition text-sm">{{ t.save }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- 📝 Edit Forum Topic Modal -->
+<div id="edit-topic-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('edit-topic-modal')"></div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-white dark:bg-darkCard rounded-3xl p-8 border border-slate-200 dark:border-slate-800 w-full max-w-lg shadow-2xl space-y-6">
+            <h3 class="text-xl font-bold text-gradient">{{ t.edit_topic }}</h3>
+            <form method="POST" action="{{ url_for('auth.cabinet') }}" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="edit_my_topic">
+                <input type="hidden" name="active_tab" value="listings">
+                <input type="hidden" id="edit-topic-id" name="id">
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Topic Title</label>
+                    <input type="text" id="edit-topic-title" name="title" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider mb-2 text-slate-500">Category</label>
+                    <select id="edit-topic-category" name="category" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-707 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none transition text-sm">
+                        <option value="Studying Here">Studying Here</option>
+                        <option value="Working Here">Working Here</option>
+                        <option value="General Talk">General Talk</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('edit-topic-modal')" class="px-5 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition text-sm">{{ t.cancel }}</button>
+                    <button type="submit" class="bg-gradient-brand text-white font-bold px-6 py-3 rounded-xl hover:opacity-90 transition text-sm">{{ t.save }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePasswordVisibility(fieldId, iconId) {
+        const passwordInput = document.getElementById(fieldId);
+        const icon = document.getElementById(iconId);
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            passwordInput.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
+    function switchTab(tabId) {
+        // Hide all sections
+        document.querySelectorAll('.tab-section').forEach(section => {
+            section.classList.add('hidden');
+        });
+        
+        // Deactivate all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('bg-gradient-brand', 'text-white', 'shadow-md');
+            btn.classList.add('text-slate-500', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800/40');
+        });
+
+        // Show active section
+        document.getElementById('section-' + tabId).classList.remove('hidden');
+
+        // Activate selected button
+        const activeBtn = document.getElementById('btn-' + tabId);
+        activeBtn.classList.remove('text-slate-500', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800/40');
+        activeBtn.classList.add('bg-gradient-brand', 'text-white', 'shadow-md');
+    }
+
+    function toggleItemDetails(detailsId, chevronId) {
+        const details = document.getElementById(detailsId);
+        const chevron = document.getElementById(chevronId);
+        if (details.classList.contains('hidden')) {
+            details.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        } else {
+            details.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        }
+    }
+
+    // Populate Edit Modals via HTML5 Data Attributes
+    function editJob(btn) {
+        document.getElementById('edit-job-id').value = btn.getAttribute('data-id');
+        document.getElementById('edit-job-title').value = btn.getAttribute('data-title');
+        document.getElementById('edit-job-company').value = btn.getAttribute('data-company');
+        document.getElementById('edit-job-city').value = btn.getAttribute('data-city');
+        document.getElementById('edit-job-salary').value = btn.getAttribute('data-salary');
+        document.getElementById('edit-job-type').value = btn.getAttribute('data-type');
+        document.getElementById('edit-job-category').value = btn.getAttribute('data-category');
+        document.getElementById('edit-job-description').value = btn.getAttribute('data-description');
+        document.getElementById('edit-job-contact').value = btn.getAttribute('data-contact');
+        document.getElementById('edit-job-email').value = btn.getAttribute('data-email');
+        document.getElementById('edit-job-phone').value = btn.getAttribute('data-phone');
+        openModal('edit-job-modal');
+    }
+
+    function editHousing(btn) {
+        document.getElementById('edit-house-id').value = btn.getAttribute('data-id');
+        document.getElementById('edit-house-title').value = btn.getAttribute('data-title');
+        document.getElementById('edit-house-type').value = btn.getAttribute('data-type');
+        document.getElementById('edit-house-city').value = btn.getAttribute('data-city');
+        document.getElementById('edit-house-price').value = btn.getAttribute('data-price');
+        document.getElementById('edit-house-size').value = btn.getAttribute('data-size');
+        document.getElementById('edit-house-available').value = btn.getAttribute('data-available');
+        document.getElementById('edit-house-description').value = btn.getAttribute('data-description');
+        document.getElementById('edit-house-contact').value = btn.getAttribute('data-contact');
+        document.getElementById('edit-house-email').value = btn.getAttribute('data-email');
+        document.getElementById('edit-house-phone').value = btn.getAttribute('data-phone');
+        openModal('edit-housing-modal');
+    }
+
+    function editTopic(btn) {
+        document.getElementById('edit-topic-id').value = btn.getAttribute('data-id');
+        document.getElementById('edit-topic-title').value = btn.getAttribute('data-title');
+        document.getElementById('edit-topic-category').value = btn.getAttribute('data-category');
+        openModal('edit-topic-modal');
+    }
+
+    // Google Search logic
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('listings-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase().trim();
+                const clearBtn = document.getElementById('clear-search-btn');
+                if (query.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+
+                // Search items
+                document.querySelectorAll('.listing-item').forEach(item => {
+                    const searchText = item.getAttribute('data-search-text').toLowerCase();
+                    if (searchText.includes(query)) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+
+                // Adjust headers
+                document.querySelectorAll('.listing-group').forEach(group => {
+                    const visibleItems = group.querySelectorAll('.listing-item:not(.hidden)');
+                    if (visibleItems.length === 0) {
+                        group.classList.add('hidden');
+                    } else {
+                        group.classList.remove('hidden');
+                    }
+                });
+            });
+        }
+
+        const activeTab = "{{ active_tab }}";
+        switchTab(activeTab || 'profile');
+    });
+
+    function clearSearch() {
+        const searchInput = document.getElementById('listings-search');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    }
+</script>
+{% endblock %}

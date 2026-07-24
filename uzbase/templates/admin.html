@@ -1,0 +1,599 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar Navigation -->
+        <div class="w-full lg:w-64 flex-shrink-0">
+            <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-6 sticky top-24">
+                <div>
+                    <h2 class="text-lg font-extrabold text-gradient flex items-center space-x-2">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-brandBlue"></i>
+                        <span>{{ t.admin_panel }}</span>
+                    </h2>
+                    <p class="text-[11px] text-slate-400 mt-1">{{ t.control_dashboard }}</p>
+                </div>
+
+                <nav class="space-y-1">
+                    <button onclick="showTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        <span>{{ t.dashboard_stats }}</span>
+                    </button>
+                    <button onclick="showTab('categories')" id="nav-categories" class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                        <i data-lucide="tag" class="w-4 h-4"></i>
+                        <span>{{ t.wiki_categories }}</span>
+                    </button>
+                    <button onclick="showTab('guides')" id="nav-guides" class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        <span>{{ t.wiki_guides }}</span>
+                    </button>
+                    <button onclick="showTab('users')" id="nav-users" class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>{{ t.user_accounts }}</span>
+                    </button>
+                    <button onclick="showTab('listings')" id="nav-listings" class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                        <i data-lucide="briefcase" class="w-4 h-4"></i>
+                        <span>{{ t.classified_listings }}</span>
+                    </button>
+                    <button onclick="showTab('forum')" id="nav-forum" class="nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                        <span>{{ t.forum_moderation }}</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-grow">
+            <!-- 📊 Dashboard Section -->
+            <div id="section-dashboard" class="tab-section hidden space-y-6">
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold">{{ t.analytics_overview }}</h2>
+                        <p class="text-xs text-slate-400 mt-1">{{ t.traffic_metrics }}</p>
+                    </div>
+                    <div class="flex items-center space-x-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 px-6 py-3 rounded-2xl">
+                        <div class="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-brandBlue">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase block">{{ t.total_members }}</span>
+                            <span class="text-xl font-extrabold text-slate-900 dark:text-white">{{ user_count }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-4">
+                    <h3 class="text-base font-bold flex items-center space-x-2">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-brandBlue"></i>
+                        <span>{{ t.page_views_stats }}</span>
+                    </h3>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                <tr>
+                                    <th class="px-6 py-3 font-semibold text-slate-500">{{ t.route_path }}</th>
+                                    <th class="px-6 py-3 font-semibold text-slate-500">{{ t.visits_count }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for visit in page_visits %}
+                                <tr>
+                                    <td class="px-6 py-3.5 font-mono text-slate-600 dark:text-slate-300">{{ visit.path }}</td>
+                                    <td class="px-6 py-3.5 font-bold text-brandBlue dark:text-brandGreen">{{ visit.count }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="px-6 py-4 text-center text-slate-400 text-xs">{{ t.empty_results }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🏷️ Categories Section -->
+            <div id="section-categories" class="tab-section hidden space-y-6">
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-6">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center space-x-2">
+                            <i data-lucide="tag" class="w-5 h-5 text-brandGreen"></i>
+                            <span>{{ t.wiki_categories }}</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Configure categories in Uzbek, German, and Russian languages.</p>
+                    </div>
+
+                    <!-- Create Form -->
+                    <form method="POST" class="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 rounded-2xl space-y-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="add_category">
+                        <input type="hidden" name="active_tab" value="categories">
+                        
+                        <h3 class="text-xs font-bold uppercase text-brandGreen">{{ t.add_new_category }}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">O'zbekcha (UZ)</label>
+                                <input type="text" name="name_uz" required placeholder="e.g. Tibbiy Sug'urta" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Deutsch (DE)</label>
+                                <input type="text" name="name_de" required placeholder="e.g. Krankenversicherung" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Русский (RU)</label>
+                                <input type="text" name="name_ru" required placeholder="e.g. Медицинское Страхование" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none">
+                            </div>
+                        </div>
+                        <button type="submit" class="px-5 py-2 bg-brandGreen text-white text-xs font-bold rounded-xl hover:opacity-90 transition">
+                            {{ t.create_category }}
+                        </button>
+                    </form>
+
+                    <!-- Categories list -->
+                    <div class="space-y-3 pt-2">
+                        <h3 class="text-xs font-bold uppercase text-slate-400">{{ t.current_categories }}</h3>
+                        <div class="space-y-2">
+                            {% for cat in categories %}
+                            <div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                                <!-- View State -->
+                                <div id="cat-view-{{ cat.id }}" class="flex items-center justify-between w-full">
+                                    <div class="space-y-1">
+                                        <div class="text-xs font-bold">{{ cat.name_uz }}</div>
+                                        <div class="text-[10px] text-slate-400">🇩🇪 {{ cat.name_de }} • 🇷🇺 {{ cat.name_ru }}</div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="toggleCatEdit({{ cat.id }}, true)" class="text-xs font-bold text-brandBlue hover:underline">{{ t.edit }}</button>
+                                        <form method="POST" onsubmit="return confirm('Delete category &quot;{{ cat.name_uz }}&quot;? This will also delete all guides inside it.');" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_category">
+                                            <input type="hidden" name="id" value="{{ cat.id }}">
+                                            <input type="hidden" name="active_tab" value="categories">
+                                            <button type="submit" class="text-xs font-bold text-red-600 hover:underline">{{ t.delete }}</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <!-- Edit State -->
+                                <form method="POST" id="cat-edit-{{ cat.id }}" class="hidden flex-col space-y-3 w-full">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="action" value="edit_category">
+                                    <input type="hidden" name="id" value="{{ cat.id }}">
+                                    <input type="hidden" name="active_tab" value="categories">
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="block text-[10px] text-slate-400">O'zbekcha</label>
+                                            <input type="text" name="name_uz" value="{{ cat.name_uz }}" required class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] text-slate-400">Deutsch</label>
+                                            <input type="text" name="name_de" value="{{ cat.name_de }}" required class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] text-slate-400">Русский</label>
+                                            <input type="text" name="name_ru" value="{{ cat.name_ru }}" required class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2 pt-1">
+                                        <button type="submit" class="text-xs font-bold text-emerald-600 hover:underline">{{ t.save }}</button>
+                                        <button type="button" onclick="toggleCatEdit({{ cat.id }}, false)" class="text-xs font-bold text-slate-400 hover:underline">{{ t.cancel }}</button>
+                                    </div>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📖 Wiki Guides Section -->
+            <div id="section-guides" class="tab-section hidden space-y-6">
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-6">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center space-x-2">
+                            <i data-lucide="book-open" class="w-5 h-5 text-brandBlue"></i>
+                            <span>{{ t.wiki_guide_topics }}</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Publish and manage informational wiki topics.</p>
+                    </div>
+
+                    <!-- Create Wiki Item Form -->
+                    <form method="POST" class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="add_wiki">
+                        <input type="hidden" name="active_tab" value="guides">
+                        
+                        <h3 class="text-xs font-bold uppercase text-brandBlue">{{ t.create_new_guide }}</h3>
+                        
+                        <!-- Titles Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Guide Title (UZ)</label>
+                                <input type="text" name="title_uz" required placeholder="e.g. Steuernummer qanday olinadi" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-707 rounded-xl text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Guide Title (DE)</label>
+                                <input type="text" name="title_de" required placeholder="e.g. Wie man eine Steuernummer bekommt" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-707 rounded-xl text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Guide Title (RU)</label>
+                                <input type="text" name="title_ru" required placeholder="e.g. Как получить Steuernummer" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-707 rounded-xl text-xs outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Category Selection -->
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">{{ t.assign_category }}</label>
+                            <select name="category_id" required class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-707 rounded-xl text-xs outline-none">
+                                <option value="">Select Category...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name_uz }} ({{ cat.name_de }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Contents Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Content (UZ)</label>
+                                <textarea name="content_uz" required rows="3" placeholder="Soliq raqamini olish bo'yicha..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-707 rounded-xl text-xs outline-none"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Content (DE)</label>
+                                <textarea name="content_de" required rows="3" placeholder="Um Steuernummer zu bekommen..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-707 rounded-xl text-xs outline-none"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1.5">Content (RU)</label>
+                                <textarea name="content_ru" required rows="3" placeholder="Для получения налогового номера..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-707 rounded-xl text-xs outline-none"></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="px-5 py-2 bg-brandGreen text-white text-xs font-bold rounded-xl hover:opacity-90 transition">
+                            Publish Guide Topic
+                        </button>
+                    </form>
+
+                    <!-- Current Guides Table -->
+                    <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                <tr>
+                                    <th class="px-4 py-3 font-semibold text-slate-500">Topic Title</th>
+                                    <th class="px-4 py-3 font-semibold text-slate-500">Category</th>
+                                    <th class="px-4 py-3 font-semibold text-slate-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for item in wiki_items %}
+                                <tr id="wiki-row-{{ item.id }}">
+                                    <td class="px-4 py-3.5 font-bold">
+                                        <div>{{ item.title_uz }}</div>
+                                        <div class="text-[10px] text-slate-400">🇩🇪 {{ item.title_de }} • 🇷🇺 {{ item.title_ru }}</div>
+                                    </td>
+                                    <td class="px-4 py-3.5">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">{{ item.category.name_uz }}</span>
+                                    </td>
+                                    <td class="px-4 py-3.5 space-x-2">
+                                        <button onclick="toggleWikiEdit({{ item.id }}, true)" class="font-bold text-brandBlue hover:underline">{{ t.edit }}</button>
+                                        <form method="POST" onsubmit="return confirm('Delete guide &quot;{{ item.title_uz }}&quot;?');" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_wiki">
+                                            <input type="hidden" name="id" value="{{ item.id }}">
+                                            <input type="hidden" name="active_tab" value="guides">
+                                            <button type="submit" class="font-bold text-red-600 hover:underline">{{ t.delete }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <!-- Hidden Edit form row -->
+                                <tr id="wiki-edit-row-{{ item.id }}" class="hidden bg-slate-50/50 dark:bg-slate-800/10">
+                                    <td colspan="3" class="px-4 py-4">
+                                        <form method="POST" class="space-y-3">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="edit_wiki">
+                                            <input type="hidden" name="id" value="{{ item.id }}">
+                                            <input type="hidden" name="active_tab" value="guides">
+                                            
+                                            <!-- Titles edit -->
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <div>
+                                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Title (UZ)</label>
+                                                    <input type="text" name="title_uz" value="{{ item.title_uz }}" required class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Title (DE)</label>
+                                                    <input type="text" name="title_de" value="{{ item.title_de }}" required class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-707 rounded-lg text-xs">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Title (RU)</label>
+                                                    <input type="text" name="title_ru" value="{{ item.title_ru }}" required class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-707 rounded-lg text-xs">
+                                                </div>
+                                            </div>
+                                            <!-- Category selector edit -->
+                                            <div>
+                                                <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Category</label>
+                                                <select name="category_id" required class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-707 rounded-lg text-xs">
+                                                    {% for cat in categories %}
+                                                    <option value="{{ cat.id }}" {% if cat.id == item.category_id %}selected{% endif %}>{{ cat.name_uz }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <!-- Contents edit -->
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <div>
+                                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Content (UZ)</label>
+                                                    <textarea name="content_uz" required rows="3" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-707 rounded-lg text-xs">{{ item.content_uz }}</textarea>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Content (DE)</label>
+                                                    <textarea name="content_de" required rows="3" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-707 rounded-lg text-xs">{{ item.content_de }}</textarea>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Content (RU)</label>
+                                                    <textarea name="content_ru" required rows="3" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-707 rounded-lg text-xs">{{ item.content_ru }}</textarea>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center space-x-2 pt-1">
+                                                <button type="submit" class="px-3 py-1.5 bg-brandGreen text-white text-[10px] font-bold rounded-lg">{{ t.save_changes }}</button>
+                                                <button type="button" onclick="toggleWikiEdit({{ item.id }}, false)" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded-lg">{{ t.cancel }}</button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 👥 Users Section -->
+            <div id="section-users" class="tab-section hidden space-y-6">
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <h2 class="text-xl font-bold flex items-center space-x-2">
+                            <i data-lucide="users" class="w-5 h-5 text-brandGreen"></i>
+                            <span>{{ t.registered_users }}</span>
+                        </h2>
+                        <!-- Search Bar -->
+                        <div class="relative max-w-xs w-full">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                            </div>
+                            <input type="text" id="user-search" oninput="filterUsers()" placeholder="Search user by name, email..." class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brandGreen focus:border-transparent outline-none text-xs text-slate-900 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                <tr>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.username }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.fullname }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.email }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Role</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for user in users %}
+                                <tr class="user-row">
+                                    <td class="px-6 py-4 font-semibold username-cell">@{{ user.username }}</td>
+                                    <td class="px-6 py-4 fullname-cell">{{ user.full_name }}</td>
+                                    <td class="px-6 py-4 text-xs email-cell">{{ user.email }}</td>
+                                    <td class="px-6 py-4">
+                                        {% if user.is_admin %}
+                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-brandBlue/10 text-brandBlue">Admin</span>
+                                        {% else %}
+                                        <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">Member</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {% if user.username != session['username'] %}
+                                        <form method="POST" onsubmit="return confirm('Delete user @{{ user.username }}?');" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_user">
+                                            <input type="hidden" name="username" value="{{ user.username }}">
+                                            <input type="hidden" name="active_tab" value="users">
+                                            <button type="submit" class="text-xs font-bold text-red-600 hover:underline">{{ t.delete }}</button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-xs text-slate-400">Current User</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 💼 Listings Section -->
+            <div id="section-listings" class="tab-section hidden space-y-6">
+                <!-- Jobs -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-4">
+                    <h2 class="text-xl font-bold flex items-center space-x-2">
+                        <i data-lucide="briefcase" class="w-5 h-5 text-brandBlue"></i>
+                        <span>{{ t.active_jobs }}</span>
+                    </h2>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                <tr>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.jobs }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Company</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.city }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for job in jobs %}
+                                <tr>
+                                    <td class="px-6 py-4 font-semibold">{{ job.title }}</td>
+                                    <td class="px-6 py-4">{{ job.company }}</td>
+                                    <td class="px-6 py-4">{{ job.city }}</td>
+                                    <td class="px-6 py-4">
+                                        <form method="POST" onsubmit="return confirm('Delete job &quot;{{ job.title }}&quot;?');" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_job">
+                                            <input type="hidden" name="id" value="{{ job.id }}">
+                                            <input type="hidden" name="active_tab" value="listings">
+                                            <button type="submit" class="text-xs font-bold text-red-600 hover:underline">{{ t.delete }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Housing -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-4">
+                    <h2 class="text-xl font-bold flex items-center space-x-2">
+                        <i data-lucide="home" class="w-5 h-5 text-brandGreen"></i>
+                        <span>{{ t.active_housing }}</span>
+                    </h2>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                <tr>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.housing }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Type</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.city }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for house in housing %}
+                                <tr>
+                                    <td class="px-6 py-4 font-semibold">{{ house.title }}</td>
+                                    <td class="px-6 py-4">{{ house.type }}</td>
+                                    <td class="px-6 py-4">{{ house.city }}</td>
+                                    <td class="px-6 py-4">
+                                        <form method="POST" onsubmit="return confirm('Delete housing &quot;{{ house.title }}&quot;?');" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_housing">
+                                            <input type="hidden" name="id" value="{{ house.id }}">
+                                            <input type="hidden" name="active_tab" value="listings">
+                                            <button type="submit" class="text-xs font-bold text-red-600 hover:underline">{{ t.delete }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 💬 Forum Section -->
+            <div id="section-forum" class="tab-section hidden space-y-6">
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-4">
+                    <h2 class="text-xl font-bold flex items-center space-x-2">
+                        <i data-lucide="message-square" class="w-5 h-5 text-purple-500"></i>
+                        <span>{{ t.active_forum }}</span>
+                    </h2>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
+                            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                <tr>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Topic Title</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.author }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">{{ t.upvotes }}</th>
+                                    <th class="px-6 py-3.5 font-semibold text-slate-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for topic in topics %}
+                                <tr>
+                                    <td class="px-6 py-4 font-semibold">{{ topic.title }}</td>
+                                    <td class="px-6 py-4">@{{ topic.author }}</td>
+                                    <td class="px-6 py-4">{{ topic.upvotes }}</td>
+                                    <td class="px-6 py-4">
+                                        <form method="POST" onsubmit="return confirm('Delete forum topic &quot;{{ topic.title }}&quot;?');" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_topic">
+                                            <input type="hidden" name="id" value="{{ topic.id }}">
+                                            <input type="hidden" name="active_tab" value="forum">
+                                            <button type="submit" class="text-xs font-bold text-red-600 hover:underline">{{ t.delete }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const initialTab = "{{ tab }}";
+        showTab(initialTab);
+    });
+
+    function showTab(tabId) {
+        // Hide all sections
+        document.querySelectorAll('.tab-section').forEach(section => {
+            section.classList.add('hidden');
+        });
+
+        // Deactivate all nav buttons
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.className = "nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/40";
+        });
+
+        // Show target section
+        const targetSection = document.getElementById('section-' + tabId);
+        if (targetSection) {
+            targetSection.classList.remove('hidden');
+        }
+
+        // Activate target nav button
+        const targetBtn = document.getElementById('nav-' + tabId);
+        if (targetBtn) {
+            targetBtn.className = "nav-item w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-bold transition bg-gradient-brand text-white shadow-md";
+        }
+    }
+
+    function toggleCatEdit(id, show) {
+        const viewEl = document.getElementById('cat-view-' + id);
+        const editEl = document.getElementById('cat-edit-' + id);
+        if (show) {
+            viewEl.classList.add('hidden');
+            editEl.classList.remove('hidden');
+        } else {
+            viewEl.classList.remove('hidden');
+            editEl.classList.add('hidden');
+        }
+    }
+
+    function toggleWikiEdit(id, show) {
+        const rowEl = document.getElementById('wiki-row-' + id);
+        const editRowEl = document.getElementById('wiki-edit-row-' + id);
+        if (show) {
+            editRowEl.classList.remove('hidden');
+        } else {
+            editRowEl.classList.add('hidden');
+        }
+    }
+
+    function filterUsers() {
+        const query = document.getElementById('user-search').value.toLowerCase().trim();
+        document.querySelectorAll('.user-row').forEach(row => {
+            const username = row.querySelector('.username-cell').textContent.toLowerCase();
+            const fullname = row.querySelector('.fullname-cell').textContent.toLowerCase();
+            const email = row.querySelector('.email-cell').textContent.toLowerCase();
+            
+            if (!query || username.includes(query) || fullname.includes(query) || email.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

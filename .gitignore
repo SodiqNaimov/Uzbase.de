@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+uzbase/uzbase.db
+.agent/
+.idea/
+~
+*.png
