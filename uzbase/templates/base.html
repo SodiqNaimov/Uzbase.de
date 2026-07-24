@@ -91,7 +91,7 @@
                 </a>
 
                 <!-- Desktop Navigation Links -->
-                <div class="hidden xl:flex items-center space-x-1 lg:space-x-2 xl:space-x-4">
+                <div class="hidden lg:flex items-center space-x-1 lg:space-x-2">
                     <a href="{{ url_for('jobs.jobs') }}" class="flex items-center space-x-1 px-2 py-1.5 rounded-lg text-xs xl:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition duration-200 whitespace-nowrap {% if request.path == '/jobs' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
                         <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
                         <span>{{ t.jobs }}</span>
@@ -117,7 +117,7 @@
                 <!-- Right Controls Wrapper -->
                 <div class="flex items-center space-x-2 xl:space-x-4 flex-shrink-0">
                     <!-- Desktop User Auth Controls -->
-                    <div class="hidden xl:flex items-center space-x-1.5 xl:space-x-2 border-l border-slate-200 dark:border-slate-800 pl-3 xl:pl-4">
+                    <div class="hidden lg:flex items-center space-x-1.5 border-l border-slate-200 dark:border-slate-800 pl-3 lg:pl-4">
                         {% if session.get('username') %}
                         <!-- Notification Dropdown -->
                         <div class="relative inline-block text-left" id="notification-dropdown-wrapper">
@@ -198,7 +198,7 @@
                         </button>
 
                         <!-- Mobile Burger Menu -->
-                        <button onclick="toggleMobileMenu()" class="xl:hidden p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <button onclick="toggleMobileMenu()" class="lg:hidden p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             <i data-lucide="menu" id="menu-icon" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -207,7 +207,7 @@
         </div>
 
         <!-- Mobile Menu Panel -->
-        <div id="mobile-menu" class="hidden xl:hidden px-4 pt-2 pb-4 space-y-1 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-darkSlate">
+        <div id="mobile-menu" class="hidden lg:hidden px-4 pt-2 pb-4 space-y-1 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-darkSlate">
             <a href="{{ url_for('jobs.jobs') }}" class="flex items-center space-x-2 px-3 py-3 rounded-lg text-base font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition {% if request.path == '/jobs' %}text-brandBlue dark:text-brandGreen bg-slate-100 dark:bg-slate-800{% endif %}">
                 <i data-lucide="briefcase" class="w-5 h-5"></i>
                 <span>{{ t.jobs }}</span>
